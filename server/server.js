@@ -12,7 +12,11 @@ const PORT = process.env.PORT || 3001;
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: authMiddleware,
+  context: ({ req }) => {
+    // Apply authentication middleware and attach the user to the request object
+    authMiddleware(req);
+    return { user: req.user };
+  },
 });
 
 app.use(express.urlencoded({ extended: true }));
@@ -23,7 +27,7 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../client/build")));
 }
 
-const startApolloServer = async (typeDefs, resolvers) => {
+const startApolloServer = async () => {
   await server.start();
   server.applyMiddleware({ app });
 
@@ -37,4 +41,4 @@ const startApolloServer = async (typeDefs, resolvers) => {
   });
 };
 
-startApolloServer(typeDefs, resolvers);
+startApolloServer();
