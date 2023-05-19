@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { AuthenticationError } = require('apollo-server');
 
 // set token secret and expiration date
 const secret = 'mysecretsshhhhh';
@@ -35,5 +36,16 @@ module.exports = {
     const payload = { username, email, _id };
 
     return jwt.sign({ data: payload }, secret, { expiresIn: expiration });
+  },
+  contextMiddleware: function ({ req }) {
+    const token = req.headers.authorization || '';
+    if (token) {
+      try {
+        const { data } = jwt.verify(token, secret, { expiresIn: expiration });
+        return { user: data };
+      } catch (error) {
+        throw new AuthenticationError('Invalid token!');
+      }
+    }
   },
 };
